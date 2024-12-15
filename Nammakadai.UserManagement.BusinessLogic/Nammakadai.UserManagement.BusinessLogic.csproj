@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nammakadai.Core\Nammakadai.Core.csproj" />
+    <ProjectReference Include="..\Nammakadai.Usermanagement.Repository\Nammakadai.Usermanagement.Repository.csproj" />
+  </ItemGroup>
+
+</Project>
