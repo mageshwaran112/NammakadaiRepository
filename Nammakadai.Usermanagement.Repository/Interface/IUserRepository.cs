@@ -1,9 +1,10 @@
 ﻿using Nammakadai.Core.Model;
+using System.Data;
 
 namespace Nammakadai.Usermanagement.Repository.Interface
 {
     public interface IUserRepository
     {
-        Task<IEnumerable<User>> GetAllUsers(int id);
+        Task<User> GetUserById(int id);
     }
 }

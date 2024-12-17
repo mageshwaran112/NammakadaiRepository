@@ -5,7 +5,7 @@ VisualStudioVersion = 17.9.34714.143
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebApi", "WebApi", "{10DD5C6C-0CA9-4E5A-98A5-95CD7C8EE829}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nammakadai.Serverless.UserManagement", "Nammakadai.Serverless.UserManagement\Nammakadai.Serverless.UserManagement.csproj", "{A061B3B1-61AD-4E7A-BFE9-E511EC6C7B5C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nammakadai.Serverless.UserManagement", "Nammakadai.Serverless.UserManagement\Nammakadai.Serverless.UserManagement.csproj", "{A061B3B1-61AD-4E7A-BFE9-E511EC6C7B5C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BusinessLogic", "BusinessLogic", "{F7818555-211E-4995-A212-DA6701A74F66}"
 EndProject
@@ -15,13 +15,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository", "Repository", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{C8F506B0-0350-4B1B-AF2B-C40E45E8D514}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nammakadai.UserManagement.BusinessLogic", "Nammakadai.UserManagement.BusinessLogic\Nammakadai.UserManagement.BusinessLogic.csproj", "{3B96CA94-8DEF-40F8-8FB7-FC4C67613184}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nammakadai.UserManagement.BusinessLogic", "Nammakadai.UserManagement.BusinessLogic\Nammakadai.UserManagement.BusinessLogic.csproj", "{3B96CA94-8DEF-40F8-8FB7-FC4C67613184}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nammakadai.Core", "Nammakadai.Core\Nammakadai.Core.csproj", "{79800424-F034-4E0C-A07C-B0EFFCA962DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nammakadai.Core", "Nammakadai.Core\Nammakadai.Core.csproj", "{79800424-F034-4E0C-A07C-B0EFFCA962DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nammakadai.Usermanagement.Repository", "Nammakadai.Usermanagement.Repository\Nammakadai.Usermanagement.Repository.csproj", "{80DF510F-C15E-46B6-A221-3342938E107F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nammakadai.Usermanagement.Repository", "Nammakadai.Usermanagement.Repository\Nammakadai.Usermanagement.Repository.csproj", "{80DF510F-C15E-46B6-A221-3342938E107F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nammakadai.ApiRoutes", "Nammakadai.ApiRoutes\Nammakadai.ApiRoutes.csproj", "{FAF29C94-8706-4E38-BC7F-C36C2A232E3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nammakadai.ApiRoutes", "Nammakadai.ApiRoutes\Nammakadai.ApiRoutes.csproj", "{FAF29C94-8706-4E38-BC7F-C36C2A232E3B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C9ABCDE1-2BE1-449B-926E-7978743041BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nammakadai.Common", "Nammakadai.Common\Nammakadai.Common.csproj", "{D2B612F1-E625-4AD8-A364-C8922465BA77}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +53,10 @@ Global
 		{FAF29C94-8706-4E38-BC7F-C36C2A232E3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAF29C94-8706-4E38-BC7F-C36C2A232E3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAF29C94-8706-4E38-BC7F-C36C2A232E3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2B612F1-E625-4AD8-A364-C8922465BA77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2B612F1-E625-4AD8-A364-C8922465BA77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2B612F1-E625-4AD8-A364-C8922465BA77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2B612F1-E625-4AD8-A364-C8922465BA77}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,6 +67,7 @@ Global
 		{79800424-F034-4E0C-A07C-B0EFFCA962DA} = {BC4F9EB0-F887-41D7-B041-9D041D8444C2}
 		{80DF510F-C15E-46B6-A221-3342938E107F} = {8502E9C3-47AB-44BC-8933-CAA31252E060}
 		{FAF29C94-8706-4E38-BC7F-C36C2A232E3B} = {C8F506B0-0350-4B1B-AF2B-C40E45E8D514}
+		{D2B612F1-E625-4AD8-A364-C8922465BA77} = {C9ABCDE1-2BE1-449B-926E-7978743041BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {58154C9A-620C-4407-8FEF-8A3FBA4C8D4B}

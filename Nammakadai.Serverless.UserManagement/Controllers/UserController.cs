@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Nammakadai.Core.Model;
 using Nammakadai.UserManagement.BusinessLogic.Interface;
 
 namespace Nammakadai.Serverless.UserManagement.Controllers
@@ -17,9 +18,9 @@ namespace Nammakadai.Serverless.UserManagement.Controllers
 
         [HttpGet]
         [Route(ApiRoutes.User.GetUsers)]
-        public async Task<ActionResult<IEnumerable<Core.Model.User>>> GetAll(int id)
+        public async Task<ActionResult<User>> GetAll(int id)
         {
-            var users = await _userService.GetAllUsers(id);
+            var users = await _userService.GetUserById(id);
             return Ok(users);
         }
     }

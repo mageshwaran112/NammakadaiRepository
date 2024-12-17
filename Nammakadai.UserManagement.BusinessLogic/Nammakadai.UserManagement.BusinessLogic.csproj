@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Nammakadai.Core\Nammakadai.Core.csproj" />
     <ProjectReference Include="..\Nammakadai.Usermanagement.Repository\Nammakadai.Usermanagement.Repository.csproj" />
   </ItemGroup>
