@@ -1,4 +1,3 @@
-using AutoMapper;
 using Nammakadai.Common;
 using Nammakadai.Usermanagement.Repository;
 using Nammakadai.Usermanagement.Repository.Interface;

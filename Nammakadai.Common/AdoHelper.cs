@@ -66,46 +66,42 @@ namespace Nammakadai.Common
         }
         public async Task<T?> GetDataAsync<T>(string storeProcedure, NpgsqlParameter[] sqlParameters) where T : class, new()
         {
-            await OpenConnectionString();  // Open connection asynchronously
+            await OpenConnectionString();
 
-            // Use CommandType.StoredProcedure for stored procedure calls
             using var sqlCommand = new NpgsqlCommand($"SELECT * FROM {storeProcedure}({string.Join(", ", sqlParameters.Select(p => p.ParameterName))})", _connection)
             {
                 CommandType = CommandType.Text,
                 Transaction = _transaction
             };
-            // Add parameters if any
+
             if (sqlParameters != null)
             {
                 sqlCommand.Parameters.AddRange(sqlParameters);
             }
 
-            // Use NpgsqlDataAdapter to fill the DataSet/DataTable
             using NpgsqlDataAdapter sqlDataAdapter = new NpgsqlDataAdapter(sqlCommand);
 
-            // Return DataSet if T is DataSet
             if (typeof(T) == typeof(DataSet))
             {
                 var ds = new DataSet();
-                sqlDataAdapter.Fill(ds);  // Fill DataSet
-                sqlCommand.Parameters.Clear();  // Clear parameters
+                sqlDataAdapter.Fill(ds);
+                sqlCommand.Parameters.Clear();
 
-                return ds as T;  // Return DataSet
+                return ds as T;
             }
-            // Return DataTable if T is DataTable
             else if (typeof(T) == typeof(DataTable))
             {
                 var dt = new DataTable();
-                sqlDataAdapter.Fill(dt);  // Fill DataTable
-                sqlCommand.Parameters.Clear();  // Clear parameters
+                sqlDataAdapter.Fill(dt);
+                sqlCommand.Parameters.Clear();
 
-                return dt as T;  // Return DataTable
+                return dt as T;
             }
 
-            return null;  // Return null if type is not DataSet or DataTable
+            return null; 
         }
 
-        public async Task<T?> QuerySingleOrDefaultAsync<T>(string functionName, NpgsqlParameter[] sqlParameters) where T : class, new()
+        public async Task<T?> ExecuteReaderAsync<T>(string functionName, NpgsqlParameter[] sqlParameters) where T : class, new()
         {
             await OpenConnectionString();
 

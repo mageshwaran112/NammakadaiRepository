@@ -1,13 +1,9 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using Nammakadai.Common;
+﻿using Nammakadai.Common;
 using Nammakadai.Common.Constants;
 using Nammakadai.Core.Model;
 using Nammakadai.Usermanagement.Repository.Interface;
 using Npgsql;
 using NpgsqlTypes;
-using System.Data;
-using System.Runtime.InteropServices;
 
 namespace Nammakadai.Usermanagement.Repository
 {
@@ -29,7 +25,7 @@ namespace Nammakadai.Usermanagement.Repository
                 new NpgsqlParameter("@User_ID", NpgsqlDbType.Integer) { Value = id }
             };
 
-            return await adoHelper.QuerySingleOrDefaultAsync<User>(DBConstant.GetUserById, sqlParameters);
+            return await adoHelper.ExecuteReaderAsync<User>(DBConstant.GetUserById, sqlParameters);
         }
     }
 }

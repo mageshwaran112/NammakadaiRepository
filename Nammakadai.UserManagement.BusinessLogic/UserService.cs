@@ -1,8 +1,7 @@
-﻿using Nammakadai.Core.Model;
-using Nammakadai.UserManagement.BusinessLogic.Interface;
+﻿using AutoMapper;
+using Nammakadai.Core.Model;
 using Nammakadai.Usermanagement.Repository.Interface;
-using AutoMapper;
-using System.Data;
+using Nammakadai.UserManagement.BusinessLogic.Interface;
 namespace Nammakadai.UserManagement.BusinessLogic
 {
     public class UserService : IUserService
