@@ -4,7 +4,7 @@
 
 CREATE OR REPLACE FUNCTION public.get_userbyid(
 	user_id integer)
-    RETURNS TABLE(userid integer, firstname character varying, lastname character varying, usermail character varying, phonenumber character varying) 
+    RETURNS TABLE(userid integer, username character varying, usermail character varying, phonenumber character varying) 
     LANGUAGE 'plpgsql'
     COST 100
     VOLATILE PARALLEL UNSAFE
@@ -15,8 +15,7 @@ BEGIN
     RETURN QUERY
     SELECT 
         u.Id AS UserId,
-        u.FirstName,
-        u.LastName,
+        u.UserName,
         u.UserMail,
         u.PhoneNumber
     FROM 

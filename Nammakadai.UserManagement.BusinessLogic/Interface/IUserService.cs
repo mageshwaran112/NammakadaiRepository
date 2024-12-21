@@ -4,6 +4,7 @@ namespace Nammakadai.UserManagement.BusinessLogic.Interface
 {
     public interface IUserService
     {
-        Task<User> GetUserById(int id);
+        Task<User> GetUserByIdAsync(int id);
+        Task<int?> SaveUserDetailAsync(User userRequest);
     }
 }

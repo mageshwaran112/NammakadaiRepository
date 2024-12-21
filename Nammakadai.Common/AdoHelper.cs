@@ -1,5 +1,9 @@
 ﻿using Npgsql;
 using System.Data;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.Data.SqlClient;
+using System.Dynamic;
 
 namespace Nammakadai.Common
 {
@@ -100,25 +104,49 @@ namespace Nammakadai.Common
 
             return null; 
         }
-
-        public async Task<T?> ExecuteReaderAsync<T>(string functionName, NpgsqlParameter[] sqlParameters) where T : class, new()
+        public DataTable ExecuteQuery(string query)
         {
-            await OpenConnectionString();
+            DataTable dataTable = new DataTable();
 
-            using var sqlCommand = new NpgsqlCommand($"SELECT * FROM {functionName}({string.Join("", sqlParameters.Select(p => p.ParameterName))})", _connection)
+            using (var connection = new NpgsqlConnection(_connectionString))
             {
-                CommandType = CommandType.Text,
-                Transaction = _transaction
+                connection.Open();
+
+                using (var command = new NpgsqlCommand(query, connection))
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        dataTable.Load(reader);
+                    }
+                }
+            }
+
+            return dataTable;
+        }
+
+        public async Task<List<T>> ExecuteReaderAsync<T>(string functionName, NpgsqlParameter[]? sqlParameters) where T : class, new()
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            string query = sqlParameters == null || sqlParameters.Length == 0
+                ? $"SELECT * FROM {functionName}()"
+                : $"SELECT * FROM {functionName}({string.Join(",", sqlParameters.Select(p => p.ParameterName))})";
+
+            await using var command = new NpgsqlCommand(query, connection)
+            {
+                CommandType = CommandType.Text
             };
 
             if (sqlParameters != null)
             {
-                sqlCommand.Parameters.AddRange(sqlParameters);
+                command.Parameters.AddRange(sqlParameters);
             }
 
-            using var reader = await sqlCommand.ExecuteReaderAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            var results = new List<T>();
 
-            if (await reader.ReadAsync())
+            while (await reader.ReadAsync())
             {
                 var instance = new T();
                 foreach (var property in typeof(T).GetProperties())
@@ -128,14 +156,60 @@ namespace Nammakadai.Common
                         property.SetValue(instance, reader[property.Name]);
                     }
                 }
-                return instance;
+                results.Add(instance);
             }
 
-            return null;
+            return results;
         }
 
 
+        public async Task<object> ExecuteScalarAsync(string functionName, NpgsqlParameter[] sqlParameters)
+        {
+            await OpenConnectionString();
 
+            string query = GetFunctionParameter(functionName, sqlParameters);
+            
+            using (var command = new NpgsqlCommand(query, _connection))
+            {
+                if (sqlParameters != null)
+                {
+                    command.Parameters.AddRange(sqlParameters);
+                }
+
+                var result = await command.ExecuteScalarAsync();
+
+                return result;
+            }
+
+        }
+        public async Task ExecuteNonQuery(string functionName, NpgsqlParameter[] sqlParameters)
+        {
+            await OpenConnectionString();
+
+            string query = GetFunctionParameter(functionName, sqlParameters);
+
+            using (var command = new NpgsqlCommand(query, _connection))
+            {
+                if (sqlParameters != null)
+                {
+                    command.Parameters.AddRange(sqlParameters);
+                }
+
+                var result = await command.ExecuteNonQueryAsync();
+
+                command.Parameters.Clear();
+            }
+
+        }
+
+        private string GetFunctionParameter (string functionName, NpgsqlParameter[] sqlParameters)
+        {
+            var parameterPlaceholders = sqlParameters.Select(p => p.ParameterName).ToList();
+
+            string query = $"SELECT {functionName}({string.Join(",", parameterPlaceholders)})";
+
+            return query;
+        }
         protected virtual void Dispose (bool disposing)
         {
             if(!disposed)

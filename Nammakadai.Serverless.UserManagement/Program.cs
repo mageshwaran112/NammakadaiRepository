@@ -1,8 +1,10 @@
 using Nammakadai.Common;
+using Nammakadai.Common.GenerateSms;
 using Nammakadai.Usermanagement.Repository;
 using Nammakadai.Usermanagement.Repository.Interface;
 using Nammakadai.UserManagement.BusinessLogic;
 using Nammakadai.UserManagement.BusinessLogic.Interface;
+using Nammakadai.UserManagement.BusinessLosgic.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -18,7 +20,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
 builder.Services.AddSingleton<IDataBaseConfiguration, DataBaseConfiguration>();
+builder.Services.AddScoped<OTPFunction>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

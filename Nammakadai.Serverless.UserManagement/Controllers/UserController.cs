@@ -20,8 +20,16 @@ namespace Nammakadai.Serverless.UserManagement.Controllers
         [Route(ApiRoutes.User.GetUsers)]
         public async Task<ActionResult<User>> GetAll(int id)
         {
-            var users = await _userService.GetUserById(id);
+            var users = await _userService.GetUserByIdAsync(id);
             return Ok(users);
+        }
+
+        [HttpPost]
+        [Route(ApiRoutes.User.SaveUser)]
+        public async Task<IActionResult> SaveUser(User userRequest)
+        {
+            var result = await _userService.SaveUserDetailAsync(userRequest);           
+            return Ok(result);
         }
     }
 }
