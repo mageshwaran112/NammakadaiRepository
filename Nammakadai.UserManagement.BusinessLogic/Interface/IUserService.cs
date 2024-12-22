@@ -5,5 +5,6 @@ namespace Nammakadai.UserManagement.BusinessLogic.Interface
     public interface IUserService
     {
         Task<IEnumerable<User>> GetAllUsers(int id);
+        Task<bool> ValidateUser(string phoneNumber);
     }
 }

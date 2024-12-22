@@ -22,5 +22,14 @@ namespace Nammakadai.Serverless.UserManagement.Controllers
             var users = await _userService.GetAllUsers(id);
             return Ok(users);
         }
+
+        [HttpPost]
+        [Route(ApiRoutes.User.GetUsers)]
+        public async Task<ActionResult<bool>> ValidateUser([FromBody] string phoneNumber)
+        {
+            var users = await _userService.ValidateUser(phoneNumber);
+            return Ok(users);
+        }
+
     }
 }

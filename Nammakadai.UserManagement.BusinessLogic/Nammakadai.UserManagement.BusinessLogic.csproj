@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Vonage" Version="7.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Nammakadai.Core\Nammakadai.Core.csproj" />
     <ProjectReference Include="..\Nammakadai.Usermanagement.Repository\Nammakadai.Usermanagement.Repository.csproj" />
   </ItemGroup>
