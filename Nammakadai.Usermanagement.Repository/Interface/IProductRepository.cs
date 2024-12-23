@@ -4,6 +4,6 @@ namespace Nammakadai.Usermanagement.Repository.Interface
 {
     public interface IProductRepository
     {
-        public Task<List<ListItemsModel>> GetListItems();
+        public Task<string> GetListItems();
     }
 }

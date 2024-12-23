@@ -1,14 +1,19 @@
 ﻿--DROP FUNCTION Get_Category_Details()
-CREATE OR REPLACE FUNCTION Get_Category_Details()
-RETURNS TABLE (category_result JSON, subcategory_result JSON, product_result JSON) AS $$
+CREATE OR REPLACE FUNCTION public.get_category_details()
+    RETURNS jsonb
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+    combined_result jsonb;
 BEGIN
-    RETURN QUERY 
-    SELECT 
-        (SELECT json_agg(row_to_json(c)) FROM
-		(SELECT categoryid,categoryname,isactive FROM Category) c) AS category_result,
-        (SELECT json_agg(row_to_json(sc)) FROM 
-		(SELECT subcategoryid,subcategoryname,categoryid FROM SubCategory)sc) AS subcategory_result,
-        (SELECT json_agg(row_to_json(p)) FROM
-		(SELECT productid,productname,originalprice,offerprice,stockquantity,subcategoryid FROM Products)p) AS product_result;
+    SELECT jsonb_build_object(
+        'categories', (SELECT jsonb_agg(row_to_json(cat)) FROM (SELECT categoryid, categoryname, isactive FROM Category) cat),
+        'subcategories', (SELECT jsonb_agg(row_to_json(sub)) FROM (SELECT subcategoryid, subcategoryname, categoryid FROM SubCategory) sub),
+        'products', (SELECT jsonb_agg(row_to_json(pro)) FROM (SELECT productid, productname, originalprice, offerprice, stockquantity, subcategoryid FROM Products) pro)
+    ) INTO combined_result;
+ 
+    RETURN combined_result;
 END;
-$$ LANGUAGE plpgsql;
+$BODY$;

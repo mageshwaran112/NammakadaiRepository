@@ -4,6 +4,6 @@ namespace Nammakadai.UserManagement.BusinessLosgic.Interface
 {
     public interface IProductService
     {
-        public Task<List<ListItemsModel>> GetListItems();
+        public Task<ListItemsModel> GetListItems();
     }
 }

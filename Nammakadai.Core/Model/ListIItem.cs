@@ -4,9 +4,13 @@ namespace Nammakadai.Core.Model
 {
     public class ListItemsModel
     {
-        [JsonProperty("category_result")]
+        [JsonProperty("categories")]
         public List<Category> Categories { get; set; }
-        //public List<SubCategory> SubCategories { get; set; }
-        //public List<Products> Products { get; set; }
+
+        [JsonProperty("subcategories")]
+        public List<SubCategory> SubCategories { get; set; }
+
+        [JsonProperty("products")]
+        public List<Products> Products { get; set; }
     }
 }

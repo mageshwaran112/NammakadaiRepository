@@ -1,6 +1,7 @@
 ﻿using Nammakadai.Core.Model;
 using Nammakadai.Usermanagement.Repository.Interface;
 using Nammakadai.UserManagement.BusinessLosgic.Interface;
+using Newtonsoft.Json;
 
 namespace Nammakadai.UserManagement.BusinessLogic
 {
@@ -13,9 +14,10 @@ namespace Nammakadai.UserManagement.BusinessLogic
             _productRepository = productRepository;
         }
 
-        public async Task<List<ListItemsModel>> GetListItems()
+        public async Task<ListItemsModel> GetListItems()
         {
-            return await _productRepository.GetListItems();
+            string productCategory = await _productRepository.GetListItems();
+            return JsonConvert.DeserializeObject<ListItemsModel>(productCategory);
         }
     }
 }
