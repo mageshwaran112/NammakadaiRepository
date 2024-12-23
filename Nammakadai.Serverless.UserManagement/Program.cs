@@ -11,7 +11,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 var connectionString = builder.Configuration.GetConnectionString("DBConnection");
 
-
+AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
 // Add services to the container.
 
 builder.Services.AddControllers();

@@ -13,7 +13,7 @@ namespace Nammakadai.UserManagement.BusinessLogic
             _productRepository = productRepository;
         }
 
-        public async Task<List<ListItem>> GetListItems()
+        public async Task<List<ListItemsModel>> GetListItems()
         {
             return await _productRepository.GetListItems();
         }

@@ -9,5 +9,6 @@
 
         //Product
         public const string GetListItem = "Get_ListItems";
+        public const string GetCategoryDetails = "Get_Category_Details";
     }
 }

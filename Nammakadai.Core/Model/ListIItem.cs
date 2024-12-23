@@ -1,9 +1,12 @@
-﻿namespace Nammakadai.Core.Model
+﻿using Newtonsoft.Json;
+
+namespace Nammakadai.Core.Model
 {
-    public class ListItem
+    public class ListItemsModel
     {
-        public List<Category>Categories { get; set; }
-        public List<SubCategory> SubCategories { get; set; }
-        public List<Products> Products { get; set; }
+        [JsonProperty("category_result")]
+        public List<Category> Categories { get; set; }
+        //public List<SubCategory> SubCategories { get; set; }
+        //public List<Products> Products { get; set; }
     }
 }

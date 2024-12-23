@@ -123,7 +123,7 @@ namespace Nammakadai.Common
 
             return dataTable;
         }
-
+    
         public async Task<List<T>> ExecuteReaderAsync<T>(string functionName, NpgsqlParameter[]? sqlParameters) where T : class, new()
         {
             await using var connection = new NpgsqlConnection(_connectionString);
@@ -161,27 +161,94 @@ namespace Nammakadai.Common
 
             return results;
         }
-
-
-        public async Task<object> ExecuteScalarAsync(string functionName, NpgsqlParameter[] sqlParameters)
+        private void AttachParameters(NpgsqlCommand command, NpgsqlParameter[] commandParameters)
         {
-            await OpenConnectionString();
-
-            string query = GetFunctionParameter(functionName, sqlParameters);
-            
-            using (var command = new NpgsqlCommand(query, _connection))
+            if (command == null) throw new ArgumentNullException("command");
+            if (commandParameters != null)
             {
-                if (sqlParameters != null)
+                foreach (NpgsqlParameter p in commandParameters)
                 {
-                    command.Parameters.AddRange(sqlParameters);
+
+                    if (p != null)
+                    {
+                        // Check for derived output value with no value assigned
+                        if ((p.Direction == ParameterDirection.InputOutput ||
+                            p.Direction == ParameterDirection.Input) &&
+                            (p.Value == null))
+                        {
+                            p.Value = DBNull.Value;
+                        }
+
+                        command.Parameters.Add(new() { Value = p.Value });
+                    }
                 }
+            }
+        }
 
-                var result = await command.ExecuteScalarAsync();
+        private void PrepareCommand(NpgsqlCommand command, NpgsqlConnection connection, NpgsqlTransaction transaction, CommandType commandType, string commandText, NpgsqlParameter[] commandParameters, out bool mustCloseConnection)
+        {
+            if (command == null) throw new ArgumentNullException("command");
+            if (commandText == null || commandText.Length == 0) throw new ArgumentNullException("commandText");
 
-                return result;
+            // If the provided connection is not open, we will open it
+            if (connection.State != ConnectionState.Open)
+            {
+                mustCloseConnection = true;
+                connection.Open();
+            }
+            else
+            {
+                mustCloseConnection = false;
             }
 
+            // Associate the connection with the command
+            command.Connection = connection;
+
+            // Set the command text (stored procedure name or SQL statement)
+            command.CommandText = commandText;
+
+            // If we were provided a transaction, assign it
+            if (transaction != null)
+            {
+                if (transaction.Connection == null) throw new ArgumentException("The transaction was rollbacked or commited, please provide an open transaction.", "transaction");
+                command.Transaction = transaction;
+            }
+
+            // Set the command type
+            command.CommandType = commandType;
+
+            // Attach the command parameters if they are provided
+            if (commandParameters != null)
+            {
+                AttachParameters(command, commandParameters);
+            }
+            return;
         }
+        public async Task<object?> ExecuteScalarAsync(string functionName, params NpgsqlParameter[]? commandParameters)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                if (connection == null) throw new ArgumentNullException("connection");
+
+                NpgsqlCommand cmd = new NpgsqlCommand();
+                bool mustCloseConnection = false;
+                PrepareCommand(cmd, connection, (NpgsqlTransaction)null, CommandType.StoredProcedure, functionName, commandParameters, out mustCloseConnection);
+
+                // Await the async execution
+                object retval = await cmd.ExecuteScalarAsync();
+
+                cmd.Parameters.Clear();
+
+                if (mustCloseConnection)
+                    await connection.CloseAsync();
+
+                return retval;
+            }
+        }
+
+       
         public async Task ExecuteNonQuery(string functionName, NpgsqlParameter[] sqlParameters)
         {
             await OpenConnectionString();
@@ -204,8 +271,9 @@ namespace Nammakadai.Common
 
         private string GetFunctionParameter (string functionName, NpgsqlParameter[] sqlParameters)
         {
-            var parameterPlaceholders = sqlParameters.Select(p => p.ParameterName).ToList();
 
+             var   parameterPlaceholders = sqlParameters.Select(p => p.ParameterName).ToList();
+  
             string query = $"SELECT {functionName}({string.Join(",", parameterPlaceholders)})";
 
             return query;

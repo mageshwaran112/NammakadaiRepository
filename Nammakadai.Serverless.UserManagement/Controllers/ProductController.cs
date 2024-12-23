@@ -20,7 +20,7 @@ namespace Nammakadai.Serverless.UserManagement.Controllers
 
         [HttpGet]
         [Route(ApiRoutes.Product.GetListItem)]
-        public async Task<ActionResult<ListItem>> GetAllListItem()
+        public async Task<ActionResult<ListItemsModel>> GetAllListItem()
         {
             var list = await _productService.GetListItems();
             return Ok(list);
