@@ -24,6 +24,9 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+
 builder.Services.AddSingleton<IDataBaseConfiguration, DataBaseConfiguration>();
 builder.Services.AddScoped<OTPFunction>();
 var app = builder.Build();
