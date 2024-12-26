@@ -22,5 +22,13 @@ namespace Nammakadai.Serverless.UserManagement.Controllers
         {
             await _cartService.AddToCart(cartRequest);
         }
+
+        [HttpGet]
+        [Route(ApiRoutes.Cart.GetCartDetails)]
+        public async Task<IActionResult> GetCartDetailsAsync(int userId)
+        {
+           var result = await _cartService.GetCartDetailsAsync(userId);
+           return Ok(result);
+        }
     }
 }

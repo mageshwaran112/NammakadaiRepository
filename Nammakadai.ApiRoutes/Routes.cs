@@ -12,5 +12,6 @@
     public static class Cart
     {
         public const string AddToCart = "api/Cart/AddToCart";
+        public const string GetCartDetails = "api/Cart/GetCartDetails";
     }
 }

@@ -2,6 +2,7 @@
 using Nammakadai.Common.Constants;
 using Nammakadai.Core.Model;
 using Nammakadai.Usermanagement.Repository.Interface;
+using Newtonsoft.Json;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -29,6 +30,19 @@ namespace Nammakadai.Usermanagement.Repository
             };
 
             await adoHelper.ExecuteNonQuery(DBConstant.AddCart, sqlParameter);
+        }
+
+        public async Task<string> GetCartDetailsAsync(int userId)
+        {
+            AdoHelper adoHelper = new AdoHelper(_connectionString);
+
+            var sqlParameter = new NpgsqlParameter[]
+            {
+                new NpgsqlParameter("@in_userid",NpgsqlDbType.Integer){ Value = userId},
+            };
+
+            var result = await adoHelper.ExecuteScalarAsync(DBConstant.GetCartDetail, sqlParameter);
+            return result.ToString();
         }
     }
 }
