@@ -4,6 +4,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Microsoft.Data.SqlClient;
 using System.Dynamic;
+using System.Collections;
 
 namespace Nammakadai.Common
 {
@@ -248,27 +249,107 @@ namespace Nammakadai.Common
             }
         }
 
-       
-        public async Task ExecuteNonQuery(string functionName, NpgsqlParameter[] sqlParameters)
+
+        //public async Task ExecuteNonQuery(string functionName, NpgsqlParameter[] sqlParameters)
+        //{
+        //    await OpenConnectionString();
+
+        //    string query = GetFunctionParameter(functionName, sqlParameters);
+
+        //    using (var command = new NpgsqlCommand(query, _connection))
+        //    {
+        //        if (sqlParameters != null)
+        //        {
+        //            command.Parameters.AddRange(sqlParameters);
+        //        }
+
+        //        var result = await command.ExecuteNonQueryAsync();
+
+        //        command.Parameters.Clear();
+        //    }
+
+        //}
+
+     
+        /// <summary>
+        /// Execute a NpgsqlCommand (that returns no resultset) against the specified NpgsqlConnection 
+        /// using the provided parameters.
+        /// </summary>
+        /// <remarks>
+        /// e.g.:  
+        ///  int result = ExecuteNonQuery(conn, CommandType.StoredProcedure, "PublishOrders", new NpgsqlParameter("@prodid", 24));
+        /// </remarks>
+        /// <param name="connection">A valid NpgsqlConnection</param>
+        /// <param name="commandType">The CommandType (stored procedure, text, etc.)</param>
+        /// <param name="commandText">The stored procedure name or T-SQL command</param>
+        /// <param name="commandParameters">An array of SqlParamters used to execute the command</param>
+        /// <returns>An int representing the number of rows affected by the command</returns>
+        public async Task<int>  ExecuteNonQuery(string commandText, params NpgsqlParameter[] commandParameters)
         {
-            await OpenConnectionString();
+            if (_connection == null) throw new ArgumentNullException("connection");
 
-            string query = GetFunctionParameter(functionName, sqlParameters);
+            // Create a command and prepare it for execution
+            NpgsqlCommand cmd = new NpgsqlCommand();
+            bool mustCloseConnection = false;
+            PrepareCommand(cmd, _connection, (NpgsqlTransaction)null,CommandType.StoredProcedure, commandText, commandParameters, out mustCloseConnection);
+            cmd.CommandTimeout = 300;
+            // Finally, execute the command
+            int retval = cmd.ExecuteNonQuery();
 
-            using (var command = new NpgsqlCommand(query, _connection))
+            // Detach the SqlParameters from the command object, so they can be used again
+            cmd.Parameters.Clear();
+            if (mustCloseConnection)
+                _connection.Close();
+            return retval;
+        }
+  
+
+        /// <summary>
+        /// This method assigns an array of values to an array of SqlParameters
+        /// </summary>
+        /// <param name="commandParameters">Array of SqlParameters to be assigned values</param>
+        /// <param name="parameterValues">Array of objects holding the values to be assigned</param>
+        private void AssignParameterValues(NpgsqlParameter[] commandParameters, object[] parameterValues)
+        {
+            if ((commandParameters == null) || (parameterValues == null))
             {
-                if (sqlParameters != null)
-                {
-                    command.Parameters.AddRange(sqlParameters);
-                }
-
-                var result = await command.ExecuteNonQueryAsync();
-
-                command.Parameters.Clear();
+                // Do nothing if we get no data
+                return;
+            }
+            var pj = commandParameters.Where(x => x.Direction == ParameterDirection.Input).Count();
+            // We must have the same number of values as we pave parameters to put them in
+            if (commandParameters.Where(x => x.Direction == ParameterDirection.Input).Count() != parameterValues.Length)
+            {
+                throw new ArgumentException("Parameter count does not match Parameter Value count.");
             }
 
+            // Iterate through the SqlParameters, assigning the values from the corresponding position in the 
+            // value array
+            for (int i = 0, j = commandParameters.Where(x => x.Direction == ParameterDirection.Input).Count(); i < j; i++)
+            {
+                // If the current array value derives from IDbDataParameter, then assign its Value property
+                if (parameterValues[i] is IDbDataParameter)
+                {
+                    IDbDataParameter paramInstance = (IDbDataParameter)parameterValues[i];
+                    if (paramInstance.Value == null)
+                    {
+                        commandParameters[i].Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        commandParameters[i].Value = paramInstance.Value;
+                    }
+                }
+                else if (parameterValues[i] == null)
+                {
+                    commandParameters[i].Value = DBNull.Value;
+                }
+                else
+                {
+                    commandParameters[i].Value = parameterValues[i];
+                }
+            }
         }
-
         private string GetFunctionParameter (string functionName, NpgsqlParameter[] sqlParameters)
         {
 
@@ -300,5 +381,218 @@ namespace Nammakadai.Common
                 disposed = true;
             }
         }
+    }
+    /// <summary>
+    /// PLPGSQLHelperParameterCache provides functions to leverage a  cache of procedure parameters, and the
+    /// ability to discover parameters for stored procedures at run-time.
+    /// </summary>
+    public sealed class PLPGSQLHelperParameterCache
+    {
+        #region private methods, variables, and constructors
+
+        //Since this class provides only static methods, make the default constructor private to prevent 
+        //instances from being created with "new PLPGSQLHelperParameterCache()"
+        private PLPGSQLHelperParameterCache() { }
+
+        private static Hashtable paramCache = Hashtable.Synchronized(new Hashtable());
+
+        /// <summary>
+        /// Resolve at run time the appropriate set of SqlParameters for a stored procedure
+        /// </summary>
+        /// <param name="connection">A valid NpgsqlConnection object</param>
+        /// <param name="spName">The name of the stored procedure</param>
+        /// <param name="includeReturnValueParameter">Whether or not to include their return value parameter</param>
+        /// <returns>The parameter array discovered.</returns>
+		private static NpgsqlParameter[] DiscoverSpParameterSet(NpgsqlConnection connection, string spName, bool includeReturnValueParameter)
+        {
+            if (connection == null) throw new ArgumentNullException("connection");
+            if (spName == null || spName.Length == 0) throw new ArgumentNullException("spName");
+
+            NpgsqlCommand cmd = new NpgsqlCommand(spName, connection);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            connection.Open();
+            NpgsqlCommandBuilder.DeriveParameters(cmd);
+            connection.Close();
+
+            if (!includeReturnValueParameter)
+            {
+                cmd.Parameters.RemoveAt(0);
+            }
+
+            NpgsqlParameter[] discoveredParameters = new NpgsqlParameter[cmd.Parameters.Count];
+
+            cmd.Parameters.CopyTo(discoveredParameters, 0);
+
+            // Init the parameters with a DBNull value
+            foreach (NpgsqlParameter discoveredParameter in discoveredParameters)
+            {
+                discoveredParameter.Value = DBNull.Value;
+            }
+            return discoveredParameters;
+        }
+
+        /// <summary>
+        /// Deep copy of cached NpgsqlParameter array
+        /// </summary>
+        /// <param name="originalParameters"></param>
+        /// <returns></returns>
+        private static NpgsqlParameter[] CloneParameters(NpgsqlParameter[] originalParameters)
+        {
+            NpgsqlParameter[] clonedParameters = new NpgsqlParameter[originalParameters.Length];
+
+            for (int i = 0, j = originalParameters.Length; i < j; i++)
+            {
+                clonedParameters[i] = (NpgsqlParameter)((ICloneable)originalParameters[i]).Clone();
+            }
+
+            return clonedParameters;
+        }
+
+        #endregion private methods, variables, and constructors
+
+        #region caching functions
+
+        /// <summary>
+        /// Add parameter array to the cache
+        /// </summary>
+        /// <param name="connectionString">A valid connection string for a NpgsqlConnection</param>
+        /// <param name="commandText">The stored procedure name or T-SQL command</param>
+        /// <param name="commandParameters">An array of SqlParamters to be cached</param>
+        public static void CacheParameterSet(string connectionString, string commandText, params NpgsqlParameter[] commandParameters)
+        {
+            if (connectionString == null || connectionString.Length == 0) throw new ArgumentNullException("connectionString");
+            if (commandText == null || commandText.Length == 0) throw new ArgumentNullException("commandText");
+
+            string hashKey = connectionString + ":" + commandText;
+
+            paramCache[hashKey] = commandParameters;
+        }
+
+        /// <summary>
+        /// Retrieve a parameter array from the cache
+        /// </summary>
+        /// <param name="connectionString">A valid connection string for a NpgsqlConnection</param>
+        /// <param name="commandText">The stored procedure name or T-SQL command</param>
+        /// <returns>An array of SqlParamters</returns>
+        public static NpgsqlParameter[] GetCachedParameterSet(string connectionString, string commandText)
+        {
+            if (connectionString == null || connectionString.Length == 0) throw new ArgumentNullException("connectionString");
+            if (commandText == null || commandText.Length == 0) throw new ArgumentNullException("commandText");
+
+            string hashKey = connectionString + ":" + commandText;
+
+            NpgsqlParameter[] cachedParameters = paramCache[hashKey] as NpgsqlParameter[];
+            if (cachedParameters == null)
+            {
+                return null;
+            }
+            else
+            {
+                return CloneParameters(cachedParameters);
+            }
+        }
+
+        #endregion caching functions
+
+        #region Parameter Discovery Functions
+
+        /// <summary>
+        /// Retrieves the set of SqlParameters appropriate for the stored procedure
+        /// </summary>
+        /// <remarks>
+        /// This method will query the database for this information, and then store it in a cache for future requests.
+        /// </remarks>
+        /// <param name="connectionString">A valid connection string for a NpgsqlConnection</param>
+        /// <param name="spName">The name of the stored procedure</param>
+        /// <returns>An array of SqlParameters</returns>
+        public static NpgsqlParameter[] GetSpParameterSet(string connectionString, string spName)
+        {
+            return GetSpParameterSet(connectionString, spName, false);
+        }
+
+        /// <summary>
+        /// Retrieves the set of SqlParameters appropriate for the stored procedure
+        /// </summary>
+        /// <remarks>
+        /// This method will query the database for this information, and then store it in a cache for future requests.
+        /// </remarks>
+        /// <param name="connectionString">A valid connection string for a NpgsqlConnection</param>
+        /// <param name="spName">The name of the stored procedure</param>
+        /// <param name="includeReturnValueParameter">A bool value indicating whether the return value parameter should be included in the results</param>
+        /// <returns>An array of SqlParameters</returns>
+        public static NpgsqlParameter[] GetSpParameterSet(string connectionString, string spName, bool includeReturnValueParameter)
+        {
+            if (connectionString == null || connectionString.Length == 0) throw new ArgumentNullException("connectionString");
+            if (spName == null || spName.Length == 0) throw new ArgumentNullException("spName");
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                return GetSpParameterSetInternal(connection, spName, includeReturnValueParameter);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the set of SqlParameters appropriate for the stored procedure
+        /// </summary>
+        /// <remarks>
+        /// This method will query the database for this information, and then store it in a cache for future requests.
+        /// </remarks>
+        /// <param name="connection">A valid NpgsqlConnection object</param>
+        /// <param name="spName">The name of the stored procedure</param>
+        /// <returns>An array of SqlParameters</returns>
+        internal static NpgsqlParameter[] GetSpParameterSet(NpgsqlConnection connection, string spName)
+        {
+            return GetSpParameterSet(connection, spName, false);
+        }
+
+        /// <summary>
+        /// Retrieves the set of SqlParameters appropriate for the stored procedure
+        /// </summary>
+        /// <remarks>
+        /// This method will query the database for this information, and then store it in a cache for future requests.
+        /// </remarks>
+        /// <param name="connection">A valid NpgsqlConnection object</param>
+        /// <param name="spName">The name of the stored procedure</param>
+        /// <param name="includeReturnValueParameter">A bool value indicating whether the return value parameter should be included in the results</param>
+        /// <returns>An array of SqlParameters</returns>
+        internal static NpgsqlParameter[] GetSpParameterSet(NpgsqlConnection connection, string spName, bool includeReturnValueParameter)
+        {
+            if (connection == null) throw new ArgumentNullException("connection");
+            using (NpgsqlConnection clonedConnection = (NpgsqlConnection)((ICloneable)connection).Clone())
+            {
+                return GetSpParameterSetInternal(clonedConnection, spName, includeReturnValueParameter);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the set of SqlParameters appropriate for the stored procedure
+        /// </summary>
+        /// <param name="connection">A valid NpgsqlConnection object</param>
+        /// <param name="spName">The name of the stored procedure</param>
+        /// <param name="includeReturnValueParameter">A bool value indicating whether the return value parameter should be included in the results</param>
+        /// <returns>An array of SqlParameters</returns>
+        private static NpgsqlParameter[] GetSpParameterSetInternal(NpgsqlConnection connection, string spName, bool includeReturnValueParameter)
+        {
+            if (connection == null) throw new ArgumentNullException("connection");
+            if (spName == null || spName.Length == 0) throw new ArgumentNullException("spName");
+
+            string hashKey = connection.ConnectionString + ":" + spName + (includeReturnValueParameter ? ":include ReturnValue Parameter" : "");
+
+            NpgsqlParameter[] cachedParameters;
+
+            cachedParameters = paramCache[hashKey] as NpgsqlParameter[];
+            if (cachedParameters == null)
+            {
+                NpgsqlParameter[] spParameters = DiscoverSpParameterSet(connection, spName, includeReturnValueParameter);
+                paramCache[hashKey] = spParameters;
+                cachedParameters = spParameters;
+            }
+
+            return CloneParameters(cachedParameters);
+        }
+
+        #endregion Parameter Discovery Functions
+
     }
 }

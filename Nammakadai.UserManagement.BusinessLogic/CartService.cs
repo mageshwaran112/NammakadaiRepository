@@ -19,10 +19,10 @@ namespace Nammakadai.UserManagement.BusinessLogic
             await _cartRepository.AddToCart(cartRequest);
         }
 
-        public async Task<List<CartResponse>> GetCartDetailsAsync(int userId)
+        public async Task<CartDetail> GetCartDetailsAsync(int userId)
         {
             string result = await _cartRepository.GetCartDetailsAsync(userId);
-            return JsonConvert.DeserializeObject<List<CartResponse>>(result);
+            return JsonConvert.DeserializeObject<CartDetail>(result);
         }
     }
 }

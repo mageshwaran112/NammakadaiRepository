@@ -5,7 +5,7 @@ namespace Nammakadai.Core.Model
     public class CartResponse
     {
         [JsonProperty("CartId")]
-        public int CategoryId { get; set; }
+        public int CartId { get; set; }
         [JsonProperty("ProductId")]
         public int ProductId { get; set; }
         [JsonProperty("ProductName")]
@@ -20,5 +20,13 @@ namespace Nammakadai.Core.Model
         public bool IsInStock { get; set; }
         [JsonProperty("Quantity")]
         public int Quantity { get; set; }
+    }
+
+    public class CartDetail    {
+        [JsonProperty("cartdetails")]
+        public List<CartResponse> CartDetails { get; set; }
+        [JsonProperty("totalprice")]
+        public decimal TotalPrice { get; set; }
+
     }
 }

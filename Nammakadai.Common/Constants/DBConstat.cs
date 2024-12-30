@@ -14,5 +14,8 @@
         //Cart
         public const string AddCart = "Add_To_Cart";
         public const string GetCartDetail = "GetCartProducts";
+
+        //Order
+        public const string OrderPlacement = "OrderPlacement";
     }
 }

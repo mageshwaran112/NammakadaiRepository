@@ -14,4 +14,8 @@
         public const string AddToCart = "api/Cart/AddToCart";
         public const string GetCartDetails = "api/Cart/GetCartDetails";
     }
+    public static class Order
+    {
+        public const string OrderPlacement = "api/Order/OrderPlacement";
+    }
 }
